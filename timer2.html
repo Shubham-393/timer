@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Timer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background: #f4f8fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .container {
+            margin-top: 50px;
+            text-align: center;
+        }
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #007bff;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .progress-bar {
+            height: 20px;
+            transition: width 0.3s ease;
+        }
+        .modal-body input, .modal-body select {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .theme-dark {
+            background: #343a40;
+            color: #fff;
+        }
+        .theme-light {
+            background: #fff;
+            color: #343a40;
+        }
+        .theme-blue {
+            background: #0d6efd;
+            color: #fff;
+        }
+        .theme-custom {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="theme-light">
+
+    <div class="container">
+        <h1>Timer</h1>
+        <p>Set intervals, choose a theme, and customize alerts</p>
+        
+        <div class="card p-4 mb-4">
+            <div class="card-body">
+                <h3 class="timer-display" id="timerDisplay">00:02:00</h3>
+                <div class="progress my-3">
+                    <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <button class="btn btn-success me-2" id="startButton">Start</button>
+                <button class="btn btn-danger me-2" id="resetButton">Reset</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#settingsModal">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Timer Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="timerMinutes" class="form-label">Minutes</label>
+                        <input type="number" class="form-control" id="timerMinutes" value="2" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="timerSeconds" class="form-label">Seconds</label>
+                        <input type="number" class="form-control" id="timerSeconds" value="0" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="themeSelect" class="form-label">Theme</label>
+                        <select class="form-select" id="themeSelect">
+                            <option value="theme-light">Light</option>
+                            <option value="theme-dark">Dark</option>
+                            <option value="theme-blue">Blue</option>
+                            <option value="theme-custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="soundSelect" class="form-label">End Sound</label>
+                        <select class="form-select" id="soundSelect">
+                            <option value="none">None</option>
+                            <option value="beep">Beep</option>
+                            <option value="chime">Chime</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveSettingsButton">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timerDuration = 120; // Default 2 minutes
+        let timer;
+        const timerDisplay = document.getElementById("timerDisplay");
+        const progressBar = document.getElementById("progressBar");
+        const themeSelect = document.getElementById("themeSelect");
+        const soundSelect = document.getElementById("soundSelect");
+
+        // Start Timer
+        document.getElementById("startButton").addEventListener("click", () => {
+            let timeLeft = timerDuration;
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    playSound();
+                    alert("Time's up!");
+                } else {
+                    timeLeft--;
+                    updateTimerDisplay(timeLeft);
+                    updateProgressBar(timeLeft);
+                }
+            }, 1000);
+        });
+
+        // Reset Timer
+        document.getElementById("resetButton").addEventListener("click", () => {
+            if (timer) clearInterval(timer);
+            updateTimerDisplay(timerDuration);
+            updateProgressBar(timerDuration);
+        });
+
+        // Save Settings
+        document.getElementById("saveSettingsButton").addEventListener("click", () => {
+            const minutes = parseInt(document.getElementById("timerMinutes").value) || 0;
+            const seconds = parseInt(document.getElementById("timerSeconds").value) || 0;
+            timerDuration = minutes * 60 + seconds;
+            document.body.className = themeSelect.value;
+            updateTimerDisplay(timerDuration);
+            updateProgressBar(timerDuration);
+            document.querySelector(".btn-close").click();
+        });
+
+        // Update Timer Display
+        function updateTimerDisplay(time) {
+            const minutes = String(Math.floor(time / 60)).padStart(2, "0");
+            const seconds = String(time % 60).padStart(2, "0");
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        // Update Progress Bar
+        function updateProgressBar(time) {
+            const progress = ((timerDuration - time) / timerDuration) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Play Sound
+        function playSound() {
+            const sound = soundSelect.value;
+            if (sound === "beep") {
+                const audio = new Audio("beep.mp3");
+                audio.play();
+            } else if (sound === "chime") {
+                const audio = new Audio("chime.mp3");
+                audio.play();
+            }
+        }
+    </script>
+
+</body>
+</html>
+
